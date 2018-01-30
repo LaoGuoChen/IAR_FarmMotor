@@ -213,6 +213,7 @@ void UART_DataCommunication(void)
         
         UART1_sendData(8,sendData3);
         UART1_group.revFlag = 0;
+        
         UART4_sendData(8,sendData3);   
 
         UART4_group.revFlag = 0;

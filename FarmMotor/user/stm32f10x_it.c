@@ -302,13 +302,7 @@ void TIM5_IRQHandler(void)
     
     static uint8_t power_time=0;//ADC采样周期
     power_time++;
-    if(100 == power_time)
-    {
-     //电量监测
-     ADC_Cmd(ADC1, ENABLE); 
-     ADC_SoftwareStartConvCmd(ADC1, ENABLE); 
-     power_time= 0;
-    }
+    
      
     UART_DataCommunication();
     CAN_DataCommunication();
@@ -354,6 +348,14 @@ void TIM5_IRQHandler(void)
      HeartTime = 0;
    }
    
+   if(10 == power_time)
+    {
+     //电量监测
+     ADC_Cmd(ADC1, ENABLE); 
+     ADC_SoftwareStartConvCmd(ADC1, ENABLE); 
+     power_time= 0;
+    }
+   
     TIM_Cmd(TIM5, ENABLE);  
   }
 }
@@ -392,22 +394,31 @@ void  DMA1_Channel1_IRQHandler(void)
       {
         
         POWER_val.waterLevel +=ADC_ConvertedValue[i];
+     //   printf("%d ",ADC_ConvertedValue[i]);
+       
         
       }
       
     }
+
+
+    
+//    printf("电池电量：%0.3f %0.3f %0.3f\n",((POWER_val.powerVal1/4095)/ADC_DMA_LEN)*3.3,
+//((POWER_val.powerVal2/4095)/ADC_DMA_LEN)*3.3,((POWER_val.waterLevel/4095)/ADC_DMA_LEN)*3.3*2.0*(1.0/5.0));
+    
+    
     POWER_val.powerVal1  = ((POWER_val.powerVal1/4095)/ADC_DMA_LEN)*3.3*POWER_RATE1;
     POWER_val.powerVal2  = ((POWER_val.powerVal2/4095)/ADC_DMA_LEN)*3.3*POWER_RATE2;
     POWER_val.waterLevel = ((POWER_val.waterLevel/4095)/ADC_DMA_LEN)*3.3*POWER_RATE3;
     
- //   printf("电池电量：%0.3f %0.3f %0.3f\n",POWER_val.powerVal1,POWER_val.powerVal2,POWER_val.waterLevel);
+  //  printf("电池电量：%0.3f %0.3f %0.3f\n",POWER_val.powerVal1,POWER_val.powerVal2,POWER_val.waterLevel);
     
     //电池电压过低进入急停
     if(POWER_val.powerVal1 < PWOER_DEFAULT)
 //    if(POWER_val.powerVal1 < 24)
     {
       MSG_Event.event_noPower = 1;
-    //   printf("电池过低1：%d\n",MSG_Event.event_noPower );
+   //    printf("电池过低1：%d\n",MSG_Event.event_noPower );
     
     }
     //电池电压过低进入急停

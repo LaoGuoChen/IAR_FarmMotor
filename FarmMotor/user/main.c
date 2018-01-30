@@ -135,7 +135,7 @@ int main()
  
   while(1)
   { 
-
+    
     //*****************进入状态机处理start*******************//
     switch(STATE_machine)
     {
