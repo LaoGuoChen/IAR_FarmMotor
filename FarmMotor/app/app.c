@@ -71,6 +71,15 @@ void CAN_DataCommunication (void)
      TxMessage.Data[0]=STATE_machine;
  
      CAN_Transmit(CAN1,&TxMessage);
+     
+     TxMessage.StdId = USER_STDID_ADR10;             
+
+
+     TxMessage.Data[0]=DEBUG_err;
+ 
+     CAN_Transmit(CAN1,&TxMessage);
+     
+  
 
    }
    //反馈发动机继电器
@@ -139,9 +148,9 @@ void UART_DataCommunication(void)
  
       if(0 == MOTOR_control.rightSpeed)
       {
-        MOTOR_control.motor_dir2 = 1;
+        MOTOR_control.motor_dirR = 1;
       }
-      if(1 == MOTOR_control.motor_dir2)
+      if(1 == MOTOR_control.motor_dirR)
       {
         
         sendData1[7]= (uint8_t)(MOTOR_control.rightSpeed>>8);
@@ -154,7 +163,7 @@ void UART_DataCommunication(void)
         UART4_group.revFlag = 0;
         
         
-      }else if(0 == MOTOR_control.motor_dir2)
+      }else if(0 == MOTOR_control.motor_dirR)
       {
         sendData2[7]= (uint8_t)((~MOTOR_control.rightSpeed+1)>>8);
         sendData2[8]= (uint8_t)(~MOTOR_control.rightSpeed+1);
@@ -170,9 +179,9 @@ void UART_DataCommunication(void)
       
       if(0 == MOTOR_control.leftSpeed)
       {
-        MOTOR_control.motor_dir1 = 1;
+        MOTOR_control.motor_dirL = 1;
       }
-      if(1 == MOTOR_control.motor_dir1)
+      if(1 == MOTOR_control.motor_dirL)
       {
         
         sendData1[7]= (uint8_t)(MOTOR_control.leftSpeed>>8);
@@ -184,7 +193,7 @@ void UART_DataCommunication(void)
         UART1_group.revFlag = 0;
         
         
-      }else if(0 == MOTOR_control.motor_dir1)
+      }else if(0 == MOTOR_control.motor_dirL)
       {
         
         sendData2[7]= (uint8_t)((~MOTOR_control.leftSpeed+1)>>8);
@@ -251,7 +260,7 @@ StateMachine EventProcessing_e0(StateMachine state)
     relayControl(RELAY_1, ENGINE_state=TURN_OFF);  
     
     //***********电机报警进入急停start*************//
-    TIM_Cmd(TIM5, DISABLE);  //关闭定时器，
+  //  TIM_Cmd(TIM5, DISABLE);  //关闭定时器，
     
     check_val= CRC16_MODBUS(sendData4,6);
     
@@ -260,21 +269,31 @@ StateMachine EventProcessing_e0(StateMachine state)
     
     if(1 == MSG_Event.event_motorAlarm) //如果是电机报警测读取报警信息
     {
-         
+         DEBUG_err |= 0x04;
         
-        UART1_sendData(8,sendData4);
-        UART1_group.revFlag = 0;
-     // printf("左电机报警\n");
-      
+   //     UART1_sendData(8,sendData4);
+  //      UART1_group.revFlag = 0;
+  //   printf("左电机报警\n");
+         
     }
     if(2 == MSG_Event.event_motorAlarm)
     {
-      UART4_sendData(8,sendData4);
-      UART4_group.revFlag = 0;
-    //  printf("右电机报警\n");
+      //   UART4_sendData(8,sendData4);
+      //   UART4_group.revFlag = 0;
+      //   printf("右电机报警\n");
+      DEBUG_err |= 0x08;
     }
     
-    TIM_Cmd(TIM5, ENABLE);  //开启定时器
+    if(MSG_Event.event_noPower)
+    {
+      DEBUG_err |= 0x10;
+    }
+    
+    if(MSG_Event.event_orderStop)
+    {
+      DEBUG_err |= 0x20;
+    }
+ //   TIM_Cmd(TIM5, ENABLE);  //开启定时器
     //***********电机报警进入急停end*************//
     
     Delay_Ms(500);  //延时等待电机减速至0
@@ -285,6 +304,7 @@ StateMachine EventProcessing_e0(StateMachine state)
     MSG_Event.event_motorAlarm=0;
     MSG_Event.event_noPower=0;
     next_state = urgentStop;  //下一个状态
+ //   printf("状态：%d\n",next_state);
  
   }else if(MSG_Event.event_orderHandle)//进入遥控器控制
   {
@@ -349,28 +369,28 @@ StateMachine EventProcessing_e0(StateMachine state)
       //前进
      if(MOTOR_control.can_leftSpeed < 0 && MOTOR_control.can_rightSpeed > 0)
      {
-       MOTOR_control.motor_dir1 = 0;   
-       MOTOR_control.motor_dir2 = 1;  
+       MOTOR_control.motor_dirL = 0;   
+       MOTOR_control.motor_dirR = 1;  
    
    //    printf("车前进%d %d\n",MOTOR_control.can_leftSpeed,MOTOR_control.can_rightSpeed);
  
      }else if(MOTOR_control.can_leftSpeed > 0 && MOTOR_control.can_rightSpeed <0)
      { //后退
-       MOTOR_control.motor_dir1 = 1;   
-       MOTOR_control.motor_dir2 = 0; 
+       MOTOR_control.motor_dirL = 1;   
+       MOTOR_control.motor_dirR = 0; 
       
    //    printf("车后退%d %d\n",MOTOR_control.can_leftSpeed,MOTOR_control.can_rightSpeed);
        
      }else if(MOTOR_control.can_leftSpeed > 0 && MOTOR_control.can_rightSpeed >0)
      {//逆时针
-       MOTOR_control.motor_dir1 = 1;
-       MOTOR_control.motor_dir2 = 1;
+       MOTOR_control.motor_dirL = 1;
+       MOTOR_control.motor_dirR = 1;
    //    printf("车逆时针%d %d\n",MOTOR_control.can_leftSpeed,MOTOR_control.can_rightSpeed);
        
      }else if(MOTOR_control.can_leftSpeed < 0 && MOTOR_control.can_rightSpeed <0)
      {//顺时针
-       MOTOR_control.motor_dir1 = 0;
-       MOTOR_control.motor_dir2 = 0;
+       MOTOR_control.motor_dirL = 0;
+       MOTOR_control.motor_dirR = 0;
 
   //     printf("车顺时针 %d %d\n",MOTOR_control.can_leftSpeed,MOTOR_control.can_rightSpeed);
      }
@@ -423,19 +443,34 @@ StateMachine EventProcessing_e1(StateMachine state)
     sendData4[7] = (uint8_t)(check_val>>8); 
     if(1 == MSG_Event.event_motorAlarm) //如果是电机报警测读取报警信息
     {
-      UART1_sendData(8,sendData4);
-      UART1_group.revFlag = 0;
+    //  UART1_sendData(8,sendData4);
+    //  UART1_group.revFlag = 0;
     //  printf("左电机报警\n");
+      DEBUG_err |= 0x04;
       
     }
     if(2 == MSG_Event.event_motorAlarm)
     {
-      UART4_sendData(8,sendData4);
-      UART4_group.revFlag = 0;
+     // UART4_sendData(8,sendData4);
+     // UART4_group.revFlag = 0;
     //  printf("右电机报警\n");
+      DEBUG_err |= 0x08;
+      
     }
     TIM_Cmd(TIM5, ENABLE);  //开定时器
     //***********电机报警进入急停end*************//
+    
+    
+    if(MSG_Event.event_noPower)
+    {
+      DEBUG_err |= 0x10;
+    }
+    
+    if(MSG_Event.event_orderStop)
+    {
+      DEBUG_err |= 0x20;
+    }
+    
     
     Delay_Ms(500);
     MotorEnable(MOTOR_state = TURN_OFF);

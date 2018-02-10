@@ -80,8 +80,8 @@ static void ADC_Configuration(void)
 
   ADC_InitStructure.ADC_Mode = ADC_Mode_Independent;                   //独立的转换模式
   ADC_InitStructure.ADC_ScanConvMode = ENABLE;                         //多通道
- // ADC_InitStructure.ADC_ContinuousConvMode = DISABLE;                  //单次模式
-  ADC_InitStructure.ADC_ContinuousConvMode = ENABLE;                  //单次模式
+  ADC_InitStructure.ADC_ContinuousConvMode = DISABLE;                  //单次模式
+ // ADC_InitStructure.ADC_ContinuousConvMode = ENABLE;                  //
   ADC_InitStructure.ADC_ExternalTrigConv = ADC_ExternalTrigConv_None;  //由软件来触发
   ADC_InitStructure.ADC_DataAlign = ADC_DataAlign_Right;               //右对齐
   ADC_InitStructure.ADC_NbrOfChannel = ADC_DMA_CH;                              //开启通道个数
@@ -123,7 +123,7 @@ static void ADC_DMA_Config(void)
   DMA_InitStructure.DMA_PeripheralBaseAddr = ADC1_DR_Address;           // ADC数据寄存器地址,ADC硬件地址+ADC寄存器数据偏移地址
   DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t)ADC_ConvertedValue;  //内存地址
   DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralSRC;                    //SRC 模式从外设搬运到内存  
-  DMA_InitStructure.DMA_BufferSize = ADC_DMA_CH*ADC_DMA_CH*ADC_DMA_LEN; //DMA缓存大小
+  DMA_InitStructure.DMA_BufferSize = ADC_DMA_CH*ADC_DMA_LEN; //DMA缓存大小
   DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;      //数据传输后外设地址不变
   DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;               //数据传输后内存地址改变
   DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_HalfWord;   //外设数据宽度为16位

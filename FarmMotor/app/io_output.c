@@ -108,22 +108,22 @@ void DriveDirection(uint8_t dir)
   {
   case 0:
     
-     MOTOR_control.motor_dir1 = 0;   
-     MOTOR_control.motor_dir2 = 1;      
+     MOTOR_control.motor_dirL = 0;   
+     MOTOR_control.motor_dirR = 1;      
     break;
   case 1:
-     MOTOR_control.motor_dir1 = 1;   
-     MOTOR_control.motor_dir2 = 0;   
+     MOTOR_control.motor_dirL = 1;   
+     MOTOR_control.motor_dirR = 0;   
     break;
   case 2:
-     MOTOR_control.motor_dir1 = 1;   
-     MOTOR_control.motor_dir2 = 1;   
+     MOTOR_control.motor_dirL = 1;   
+     MOTOR_control.motor_dirR = 1;   
   
     break;
   case 3:
     
-     MOTOR_control.motor_dir1 = 0;   
-     MOTOR_control.motor_dir2 = 0; 
+     MOTOR_control.motor_dirL = 0;   
+     MOTOR_control.motor_dirR = 0; 
 
     break;
   }

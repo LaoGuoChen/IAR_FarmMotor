@@ -90,6 +90,8 @@ ADC_Sampling    POWER_val;
 MotorCtrGroup MOTOR_control;
 
 StateCondition  WORK_condition;
+
+uint8_t DEBUG_err=0;
  
 
 /*
@@ -105,20 +107,21 @@ static CanTxMsg TxMessage;
 */
 int main()
 { 
+  Data_Init();   
   BSP_ADCInit();
   OutPutInit();
   
+  MotorEnable(MOTOR_state = TURN_OFF);//初始化前关闭伺服使能
+  Delay_Ms(3000);//等待电压稳定，//延时，等待驱动器初始化完成
   //上电检测驱动器电源电压，驱动器上电后才进入工作模式，伺服使能。
-   
   while(POWER_val.powerVal2 < PWOER_DEFAULT)
   {  
      ADC_Cmd(ADC1, ENABLE); 
      ADC_SoftwareStartConvCmd(ADC1, ENABLE); 
-     Delay_Ms(100);
+     Delay_Ms(20);//上电时20ms采一次 采ADC_DMA_LEN次计算平均值
   }
 
-  //延时，等待驱动器初始化完成
- // Delay_Ms(3000);
+
  
   UART1_Init();
   UART4_Init();
@@ -128,11 +131,12 @@ int main()
 
   Timer_Init();
  
-  Data_Init();   
+
   
  // MotorEnable(MOTOR_state = TURN_ON);
 
- 
+  //测试默认进入遥控器
+ MSG_Event.event_orderHandle=1;
   while(1)
   { 
     
@@ -164,7 +168,7 @@ int main()
         MSG_Event.event_engineOFF=0;
         
       }
-      
+      /*
       if((1 == UART1_group.revFlag || 1 ==  UART4_group.revFlag) && 
          (0x04 == UART1_group.revBuf[2] || 0x04 == UART4_group.revBuf[2]))
       {
@@ -198,7 +202,7 @@ int main()
         UART4_group.revFlag = 0;
         CAN_Transmit(CAN1,&TxMessage);
         Delay_Ms(50); //延时
-      }
+      }*/
       break;
     default:
       break;
@@ -262,8 +266,8 @@ void Data_Init(void)
   MOTOR_control.can_leftSpeed=0;
   MOTOR_control.can_rightSpeed=0;
 
-  MOTOR_control.motor_dir1 = 1;   
-  MOTOR_control.motor_dir2 = 0;  
+  MOTOR_control.motor_dirL = 1;   
+  MOTOR_control.motor_dirR = 0;  
   
   ENGINE_state = TURN_OFF;
   LED_state = TURN_OFF;

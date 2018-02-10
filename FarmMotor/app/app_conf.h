@@ -118,8 +118,8 @@ typedef struct{
   int            leftSpeed;   //电机当前速度
   int            rightSpeed;
   //前进
-  uint8_t        motor_dir1;   //电机1速度方向标志0逆时针1顺时针
-  uint8_t        motor_dir2;   //电机2速度方向标志
+  uint8_t        motor_dirL;   //电机lift速度方向标志0逆时针1顺时针
+  uint8_t        motor_dirR;   //电机right速度方向标志
   
 }MotorCtrGroup;
 /*
@@ -143,6 +143,8 @@ extern ADC_Sampling     POWER_val;
 
 
 extern  MotorCtrGroup MOTOR_control;
+
+extern  uint8_t DEBUG_err;
 
 
 

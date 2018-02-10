@@ -66,8 +66,8 @@ static uint16_t  d_value[3] = {0,0,0};
 
 
 
-static uint32_t rs232_online_cnt1=RS_ONLINE_CNT;   //驱动器在线检测计数，定时器计数，接收中断中清零，计数大于设定值认为驱动器掉线
-static uint32_t rs232_online_cnt2=RS_ONLINE_CNT;
+static uint32_t rs232_online_cnt1=0;   //驱动器在线检测计数，定时器计数，串口接收中断中清零
+static uint32_t rs232_online_cnt2=0;
 
 static uint8_t switch_flag = 0;  //开关标志，切换模式标志
 
@@ -301,7 +301,7 @@ void TIM5_IRQHandler(void)
     TIM_Cmd(TIM5, DISABLE);  
     
     static uint8_t power_time=0;//ADC采样周期
-    power_time++;
+    
     
      
     UART_DataCommunication();
@@ -319,11 +319,22 @@ void TIM5_IRQHandler(void)
       {
         MotorEnable(MOTOR_state = TURN_OFF);
       }
+      //记录错误
+      if(rs232_online_cnt1 > RS_ONLINE_CNT)
+      {
+        DEBUG_err |= 0x01;
+      }
+      if(rs232_online_cnt2 > RS_ONLINE_CNT)
+      {
+        DEBUG_err |= 0x02;
+      }
+      
+      
     }else
     {      
-      if(MOTOR_state == TURN_OFF)
+      if(MOTOR_state == TURN_OFF && STATE_machine != urgentStop )
       {
-       MotorEnable(MOTOR_state = TURN_ON);
+        MotorEnable(MOTOR_state = TURN_ON);
       }   
     }
      //***********驱动器在线检测end***********************//
@@ -348,9 +359,10 @@ void TIM5_IRQHandler(void)
      HeartTime = 0;
    }
    
-   if(10 == power_time)
+   power_time++;
+   //0.1秒采样一次，采集ADC_DMA_LEN次计算一次平均值
+   if(2 == power_time)
     {
-     //电量监测
      ADC_Cmd(ADC1, ENABLE); 
      ADC_SoftwareStartConvCmd(ADC1, ENABLE); 
      power_time= 0;
@@ -376,8 +388,8 @@ void  DMA1_Channel1_IRQHandler(void)
     DMA_ClearITPendingBit(DMA1_IT_TC1); 
     
     
-    ADC_Cmd(ADC1, DISABLE); 
-    ADC_SoftwareStartConvCmd(ADC1, DISABLE); 
+   // ADC_Cmd(ADC1, DISABLE); 
+  // ADC_SoftwareStartConvCmd(ADC1, DISABLE); 
     //数据存储是全通道周期性存储，比如3各通道。xx[0]ch1,xx[1]ch2,xx[2]ch3,xx[3]ch1,xx[4]ch2,xx[5]ch3。
 
     for(u8 i=0;i<ADC_DMA_CH*ADC_DMA_LEN ;i++)
@@ -411,7 +423,7 @@ void  DMA1_Channel1_IRQHandler(void)
     POWER_val.powerVal2  = ((POWER_val.powerVal2/4095)/ADC_DMA_LEN)*3.3*POWER_RATE2;
     POWER_val.waterLevel = ((POWER_val.waterLevel/4095)/ADC_DMA_LEN)*3.3*POWER_RATE3;
     
-  //  printf("电池电量：%0.3f %0.3f %0.3f\n",POWER_val.powerVal1,POWER_val.powerVal2,POWER_val.waterLevel);
+    printf("电池电量：%0.3f %0.3f %0.3f\n",POWER_val.powerVal1,POWER_val.powerVal2,POWER_val.waterLevel);
     
     //电池电压过低进入急停
     if(POWER_val.powerVal1 < PWOER_DEFAULT)
