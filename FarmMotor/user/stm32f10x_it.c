@@ -309,6 +309,7 @@ void TIM5_IRQHandler(void)
 
     
     //***********驱动器在线检测start***********************//
+#if RS_232_CTR
     rs232_online_cnt1++;   
     rs232_online_cnt2++;
 
@@ -337,6 +338,7 @@ void TIM5_IRQHandler(void)
         MotorEnable(MOTOR_state = TURN_ON);
       }   
     }
+#endif
      //***********驱动器在线检测end***********************//
    
 

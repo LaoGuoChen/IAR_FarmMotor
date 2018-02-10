@@ -1,0 +1,17 @@
+diff a/FarmMotor/app/app.c b/FarmMotor/app/app.c	(rejected hunks)
+@@ -71,6 +71,15 @@
+      TxMessage.Data[0]=STATE_machine;
+  
+      CAN_Transmit(CAN1,&TxMessage);
++     
++     TxMessage.StdId = USER_STDID_ADR10;             
++
++
++     TxMessage.Data[0]=DEBUG_err;
++ 
++     CAN_Transmit(CAN1,&TxMessage);
++     
++  
+ 
+    }
+    //�����������̵���

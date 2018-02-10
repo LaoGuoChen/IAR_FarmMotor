@@ -57,6 +57,7 @@
 #define PWOER_MSG             100        //电池电压值系数，0-10000表示0-100，
         
 
+#define RS_232_CTR             0//速度是否为232控制，0否1是
 /*
 *状态1->2，条件vel_flag=0 && angle_flag=0 && 按键触发。2->1按键处罚 || vel_flag
 */

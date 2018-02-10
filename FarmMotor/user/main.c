@@ -133,7 +133,7 @@ int main()
  
 
   
- // MotorEnable(MOTOR_state = TURN_ON);
+  MotorEnable(MOTOR_state = TURN_ON);
 
   //²âÊÔÄ¬ÈÏ½øÈëÒ£¿ØÆ÷
  MSG_Event.event_orderHandle=1;

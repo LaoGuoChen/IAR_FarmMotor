@@ -141,6 +141,9 @@ void UART_DataCommunication(void)
 {
     static uint8_t timeFilm = 0;
 
+    static CanTxMsg TxMessage;
+    static short int can_leftSpeed,can_rightSpeed;
+    
     switch(timeFilm)
     {
     case 0:
@@ -152,7 +155,7 @@ void UART_DataCommunication(void)
       }
       if(1 == MOTOR_control.motor_dirR)
       {
-        
+        /*
         sendData1[7]= (uint8_t)(MOTOR_control.rightSpeed>>8);
         sendData1[8]= (uint8_t)(MOTOR_control.rightSpeed);
         check_val= CRC16_MODBUS(sendData1,9);
@@ -161,10 +164,13 @@ void UART_DataCommunication(void)
         UART4_sendData(11,sendData1);
 
         UART4_group.revFlag = 0;
+        */
+        can_rightSpeed = MOTOR_control.rightSpeed/SPEED_RATE;
         
         
       }else if(0 == MOTOR_control.motor_dirR)
       {
+        /*
         sendData2[7]= (uint8_t)((~MOTOR_control.rightSpeed+1)>>8);
         sendData2[8]= (uint8_t)(~MOTOR_control.rightSpeed+1);
         
@@ -175,6 +181,8 @@ void UART_DataCommunication(void)
         UART4_sendData(13,sendData2);
 
         UART4_group.revFlag = 0;
+*/
+        can_rightSpeed = ~(MOTOR_control.rightSpeed/SPEED_RATE)+1;
       }
       
       if(0 == MOTOR_control.leftSpeed)
@@ -183,7 +191,7 @@ void UART_DataCommunication(void)
       }
       if(1 == MOTOR_control.motor_dirL)
       {
-        
+        /*
         sendData1[7]= (uint8_t)(MOTOR_control.leftSpeed>>8);
         sendData1[8]= (uint8_t)(MOTOR_control.leftSpeed);
         check_val= CRC16_MODBUS(sendData1,9);
@@ -191,11 +199,12 @@ void UART_DataCommunication(void)
         sendData1[10] = (uint8_t)(check_val>>8);
         UART1_sendData(11,sendData1);
         UART1_group.revFlag = 0;
-        
+        */
+        can_leftSpeed = MOTOR_control.leftSpeed/SPEED_RATE;
         
       }else if(0 == MOTOR_control.motor_dirL)
       {
-        
+        /*
         sendData2[7]= (uint8_t)((~MOTOR_control.leftSpeed+1)>>8);
         sendData2[8]= (uint8_t)(~MOTOR_control.leftSpeed+1);
         
@@ -205,16 +214,31 @@ void UART_DataCommunication(void)
         sendData2[12] = (uint8_t)(check_val>>8);      
         UART1_sendData(13,sendData2);
         UART1_group.revFlag = 0;
-
-        
+*/
+        can_leftSpeed = ~(MOTOR_control.leftSpeed/SPEED_RATE)+1;
       }
    //   printf("发送速度：%d %d\n",MOTOR_control.leftSpeed,MOTOR_control.rightSpeed);
+      
+      
+      TxMessage.StdId = USER_STDID_ADR3;             
+      TxMessage.IDE=CAN_ID_STD;           //标准标识符
+      TxMessage.RTR=CAN_RTR_DATA;
+      TxMessage.DLC=4;
+      
+      TxMessage.Data[0]=(uint8_t)can_leftSpeed;
+      TxMessage.Data[1]=(uint8_t)(can_leftSpeed>>8);
+      TxMessage.Data[2]=(uint8_t)can_rightSpeed;
+      TxMessage.Data[3]=(uint8_t)(can_rightSpeed>>8);
+      
+      CAN_Transmit(CAN1,&TxMessage);
+        
 
       break;
       
     case 1:
     
         timeFilm = 0;
+        
         check_val= CRC16_MODBUS(sendData3,6);
         
         sendData3[6] = (uint8_t)check_val;
