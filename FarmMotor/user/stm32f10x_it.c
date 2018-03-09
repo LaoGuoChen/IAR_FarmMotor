@@ -138,11 +138,12 @@ void USB_LP_CAN1_RX0_IRQHandler(void)
       break;
     case USER_STDID_ADR3:
      
-      MOTOR_control.can_leftSpeed = (signed short)(RxMessage.Data[0] | (RxMessage.Data[1]<<8));
-      MOTOR_control.can_rightSpeed = (signed short)(RxMessage.Data[2] | (RxMessage.Data[3]<<8));
+    //  MOTOR_control.can_leftSpeed = (signed short)(RxMessage.Data[0] | (RxMessage.Data[1]<<8));
+    //  MOTOR_control.can_rightSpeed = (signed short)(RxMessage.Data[2] | (RxMessage.Data[3]<<8));
   
  //     printf("CAN速度指令 左电机%d 右电机%d \n",MOTOR_control.can_leftSpeed,MOTOR_control.can_rightSpeed);
-      MSG_Event.event_orderSpeed = 1;
+      
+    //  MSG_Event.event_orderSpeed = 1;
     
       break;
   

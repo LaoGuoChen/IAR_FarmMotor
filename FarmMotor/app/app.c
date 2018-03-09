@@ -219,20 +219,21 @@ void UART_DataCommunication(void)
       }
    //   printf("发送速度：%d %d\n",MOTOR_control.leftSpeed,MOTOR_control.rightSpeed);
       
-      
-      TxMessage.StdId = USER_STDID_ADR3;             
-      TxMessage.IDE=CAN_ID_STD;           //标准标识符
-      TxMessage.RTR=CAN_RTR_DATA;
-      TxMessage.DLC=4;
-      
-      TxMessage.Data[0]=(uint8_t)can_leftSpeed;
-      TxMessage.Data[1]=(uint8_t)(can_leftSpeed>>8);
-      TxMessage.Data[2]=(uint8_t)can_rightSpeed;
-      TxMessage.Data[3]=(uint8_t)(can_rightSpeed>>8);
-      
-      CAN_Transmit(CAN1,&TxMessage);
+      if(STATE_machine == handleControl){//只有再遥控器控制模式下才发速度指令
         
-
+        TxMessage.StdId = USER_STDID_ADR3;             
+        TxMessage.IDE=CAN_ID_STD;           //标准标识符
+        TxMessage.RTR=CAN_RTR_DATA;
+        TxMessage.DLC=4;
+        
+        TxMessage.Data[0]=(uint8_t)can_leftSpeed;
+        TxMessage.Data[1]=(uint8_t)(can_leftSpeed>>8);
+        TxMessage.Data[2]=(uint8_t)can_rightSpeed;
+        TxMessage.Data[3]=(uint8_t)(can_rightSpeed>>8);
+        
+        CAN_Transmit(CAN1,&TxMessage);
+        
+      }
       break;
       
     case 1:
