@@ -2058,12 +2058,6 @@
             <name>$PROJ_DIR$\..\app\bsp_can1.h</name>
         </file>
         <file>
-            <name>$PROJ_DIR$\..\app\bsp_exti.c</name>
-        </file>
-        <file>
-            <name>$PROJ_DIR$\..\app\bsp_exti.h</name>
-        </file>
-        <file>
             <name>$PROJ_DIR$\..\app\bsp_inputCapture.c</name>
         </file>
         <file>
@@ -2076,10 +2070,10 @@
             <name>$PROJ_DIR$\..\app\bsp_timer.h</name>
         </file>
         <file>
-            <name>$PROJ_DIR$\..\app\bsp_uart1.c</name>
+            <name>$PROJ_DIR$\..\app\bsp_uart3.c</name>
         </file>
         <file>
-            <name>$PROJ_DIR$\..\app\bsp_uart1.h</name>
+            <name>$PROJ_DIR$\..\app\bsp_uart3.h</name>
         </file>
         <file>
             <name>$PROJ_DIR$\..\app\bsp_uart4.c</name>

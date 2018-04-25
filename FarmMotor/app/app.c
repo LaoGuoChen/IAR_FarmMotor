@@ -37,16 +37,6 @@ extern uint8_t HeartTime;
 */
 
 
-
-//驱动器数据地址
-static uint8_t   sendData1[11] = {0x00,0x10,0x44,0x20,0x00,0x01,0x02,0x00,0x00,0x00,0x00};
-static uint8_t   sendData2[13] = {0x00,0x10,0x44,0x20,0x00,0x02,0x04,0x00,0x00,0xFF,0xFF,0x00,0x00};
-static uint8_t   sendData3[8] =  {0x00,0x03,0x44,0x71,0x00,0x01,0x00,0x00};//读取电流值，
-static uint8_t   sendData4[8] =  {0x00,0x03,0x46,0x6E,0x00,0x04,0x00,0x00};//读取报警数据，
-static uint16_t  check_val=0;
-
-
-
 /*
 ********************************************************************************
                   void CAN_DataCommunication (void)
@@ -59,11 +49,17 @@ static uint16_t  check_val=0;
 */
 void CAN_DataCommunication (void)
 {
+ 
    static CanTxMsg TxMessage;
-   //反馈状态机
+   
+    //发送速度指令
+    SendSpeedValue();
+    
+  
    if(HEART_TIME1 == HeartTime || 2*HEART_TIME1 == HeartTime || HEART_TIME2 - 3 == HeartTime)
    {
-     TxMessage.StdId = USER_STDID_ADR4;             
+      //反馈状态机
+     TxMessage.StdId = USER_STDID_ADR4;          
      TxMessage.IDE=CAN_ID_STD;           //标准标识符
      TxMessage.RTR=CAN_RTR_DATA;
      TxMessage.DLC=1;
@@ -72,9 +68,9 @@ void CAN_DataCommunication (void)
  
      CAN_Transmit(CAN1,&TxMessage);
      
+     Delay_Ms(1);
+     //报警信息输出
      TxMessage.StdId = USER_STDID_ADR10;             
-
-
      TxMessage.Data[0]=DEBUG_err;
  
      CAN_Transmit(CAN1,&TxMessage);
@@ -82,16 +78,22 @@ void CAN_DataCommunication (void)
   
 
    }
-   //反馈发动机继电器
+  
    if(HEART_TIME2 - 2 == HeartTime)
-   {  
+   { 
+      //反馈发动机继电器
      TxMessage.StdId = USER_STDID_ADR5;             
      TxMessage.IDE=CAN_ID_STD;           //标准标识符
      TxMessage.RTR=CAN_RTR_DATA;
      TxMessage.DLC=1;
 
-     TxMessage.Data[0]=ENGINE_state;
+     TxMessage.Data[0]=ENGINE_relayState;
 
+     CAN_Transmit(CAN1,&TxMessage);
+     //反馈发动机状态
+     Delay_Ms(1);
+     TxMessage.StdId = USER_STDID_ADR11;  
+     TxMessage.Data[0] = ENGINE_state;
      CAN_Transmit(CAN1,&TxMessage);
 
    }
@@ -128,7 +130,7 @@ void CAN_DataCommunication (void)
 }
 /*
 ********************************************************************************
-                void DataCommunication(void)
+                void SendSpeedValue(void)
 
 描述：电机控制总线定时发送数据，时基是基于定时器5中断
 参数：
@@ -137,126 +139,63 @@ void CAN_DataCommunication (void)
 ********************************************************************************
 */
 
-void UART_DataCommunication(void)
+void SendSpeedValue(void)
 {
-    static uint8_t timeFilm = 0;
-
-    static CanTxMsg TxMessage;
-    static short int can_leftSpeed,can_rightSpeed;
-    
-    switch(timeFilm)
-    {
-    case 0:
-      timeFilm = 1;
- 
-      if(0 == MOTOR_control.rightSpeed)
-      {
-        MOTOR_control.motor_dirR = 1;
-      }
-      if(1 == MOTOR_control.motor_dirR)
-      {
-        /*
-        sendData1[7]= (uint8_t)(MOTOR_control.rightSpeed>>8);
-        sendData1[8]= (uint8_t)(MOTOR_control.rightSpeed);
-        check_val= CRC16_MODBUS(sendData1,9);
-        sendData1[9] = (uint8_t)check_val;
-        sendData1[10] = (uint8_t)(check_val>>8);
-        UART4_sendData(11,sendData1);
-
-        UART4_group.revFlag = 0;
-        */
-        can_rightSpeed = MOTOR_control.rightSpeed/SPEED_RATE;
-        
-        
-      }else if(0 == MOTOR_control.motor_dirR)
-      {
-        /*
-        sendData2[7]= (uint8_t)((~MOTOR_control.rightSpeed+1)>>8);
-        sendData2[8]= (uint8_t)(~MOTOR_control.rightSpeed+1);
-        
-        check_val= CRC16_MODBUS(sendData2,11);
-        
-        sendData2[11] = (uint8_t)check_val;
-        sendData2[12] = (uint8_t)(check_val>>8);
-        UART4_sendData(13,sendData2);
-
-        UART4_group.revFlag = 0;
-*/
-        can_rightSpeed = ~(MOTOR_control.rightSpeed/SPEED_RATE)+1;
-      }
-      
-      if(0 == MOTOR_control.leftSpeed)
-      {
-        MOTOR_control.motor_dirL = 1;
-      }
-      if(1 == MOTOR_control.motor_dirL)
-      {
-        /*
-        sendData1[7]= (uint8_t)(MOTOR_control.leftSpeed>>8);
-        sendData1[8]= (uint8_t)(MOTOR_control.leftSpeed);
-        check_val= CRC16_MODBUS(sendData1,9);
-        sendData1[9] = (uint8_t)check_val;
-        sendData1[10] = (uint8_t)(check_val>>8);
-        UART1_sendData(11,sendData1);
-        UART1_group.revFlag = 0;
-        */
-        can_leftSpeed = MOTOR_control.leftSpeed/SPEED_RATE;
-        
-      }else if(0 == MOTOR_control.motor_dirL)
-      {
-        /*
-        sendData2[7]= (uint8_t)((~MOTOR_control.leftSpeed+1)>>8);
-        sendData2[8]= (uint8_t)(~MOTOR_control.leftSpeed+1);
-        
-        check_val= CRC16_MODBUS(sendData2,11);
-        
-        sendData2[11] = (uint8_t)check_val;
-        sendData2[12] = (uint8_t)(check_val>>8);      
-        UART1_sendData(13,sendData2);
-        UART1_group.revFlag = 0;
-*/
-        can_leftSpeed = ~(MOTOR_control.leftSpeed/SPEED_RATE)+1;
-      }
-   //   printf("发送速度：%d %d\n",MOTOR_control.leftSpeed,MOTOR_control.rightSpeed);
-      
-      if(STATE_machine == handleControl){//只有再遥控器控制模式下才发速度指令
-        
-        TxMessage.StdId = USER_STDID_ADR3;             
-        TxMessage.IDE=CAN_ID_STD;           //标准标识符
-        TxMessage.RTR=CAN_RTR_DATA;
-        TxMessage.DLC=4;
-        
-        TxMessage.Data[0]=(uint8_t)can_leftSpeed;
-        TxMessage.Data[1]=(uint8_t)(can_leftSpeed>>8);
-        TxMessage.Data[2]=(uint8_t)can_rightSpeed;
-        TxMessage.Data[3]=(uint8_t)(can_rightSpeed>>8);
-        
-        CAN_Transmit(CAN1,&TxMessage);
-        
-      }
-      break;
-      
-    case 1:
-    
-        timeFilm = 0;
-        
-        check_val= CRC16_MODBUS(sendData3,6);
-        
-        sendData3[6] = (uint8_t)check_val;
-        sendData3[7] = (uint8_t)(check_val>>8);  
-        
-        UART1_sendData(8,sendData3);
-        UART1_group.revFlag = 0;
-        
-        UART4_sendData(8,sendData3);   
-
-        UART4_group.revFlag = 0;
-   
   
-      break;
-    }
+  static CanTxMsg TxMessage;
+  static short int can_leftSpeed,can_rightSpeed; 
+  
+  if(0 == MOTOR_control.rightSpeed)
+  {
+    MOTOR_control.motor_dirR = 1;
+  }
+  if(1 == MOTOR_control.motor_dirR)
+  {
     
-
+    can_rightSpeed = MOTOR_control.rightSpeed/SPEED_RATE;
+    
+    
+  }else if(0 == MOTOR_control.motor_dirR)
+  {
+    
+    can_rightSpeed = ~(MOTOR_control.rightSpeed/SPEED_RATE)+1;
+  }
+  
+  if(0 == MOTOR_control.leftSpeed)
+  {
+    MOTOR_control.motor_dirL = 1;
+  }
+  if(1 == MOTOR_control.motor_dirL)
+  {
+    
+    can_leftSpeed = MOTOR_control.leftSpeed/SPEED_RATE;
+    
+  }else if(0 == MOTOR_control.motor_dirL)
+  {
+    
+    can_leftSpeed = ~(MOTOR_control.leftSpeed/SPEED_RATE)+1;
+  }
+  //   printf("发送速度：%d %d\n",MOTOR_control.leftSpeed,MOTOR_control.rightSpeed);
+  
+  if(STATE_machine == handleControl)
+  {//只有再遥控器控制模式下才发速度指令
+    
+    TxMessage.StdId = USER_STDID_ADR3;             
+    TxMessage.IDE=CAN_ID_STD;           //标准标识符
+    TxMessage.RTR=CAN_RTR_DATA;
+    TxMessage.DLC=4;
+    
+    TxMessage.Data[0]=(uint8_t)can_leftSpeed;
+    TxMessage.Data[1]=(uint8_t)(can_leftSpeed>>8);
+    TxMessage.Data[2]=(uint8_t)can_rightSpeed;
+    TxMessage.Data[3]=(uint8_t)(can_rightSpeed>>8);
+    
+    CAN_Transmit(CAN1,&TxMessage);
+    
+  }
+  
+  
+  
 }
 /*
 ********************************************************************************
@@ -282,30 +221,21 @@ StateMachine EventProcessing_e0(StateMachine state)
     
     MOTOR_control.leftSpeed  = MOTOR_control.rightSpeed = 0;
     TIM_ITConfig(TIM3, TIM_IT_CC1 | TIM_IT_CC2 | TIM_IT_CC3, DISABLE);
-    relayControl(RELAY_1, ENGINE_state=TURN_OFF);  
+    EngineRelay(ENGINE_relayState=TURN_OFF);  
     
     //***********电机报警进入急停start*************//
   //  TIM_Cmd(TIM5, DISABLE);  //关闭定时器，
-    
-    check_val= CRC16_MODBUS(sendData4,6);
-    
-    sendData4[6] = (uint8_t)check_val;
-    sendData4[7] = (uint8_t)(check_val>>8); 
+
     
     if(1 == MSG_Event.event_motorAlarm) //如果是电机报警测读取报警信息
     {
          DEBUG_err |= 0x04;
-        
-   //     UART1_sendData(8,sendData4);
-  //      UART1_group.revFlag = 0;
   //   printf("左电机报警\n");
          
     }
     if(2 == MSG_Event.event_motorAlarm)
     {
-      //   UART4_sendData(8,sendData4);
-      //   UART4_group.revFlag = 0;
-      //   printf("右电机报警\n");
+    
       DEBUG_err |= 0x08;
     }
     
@@ -322,9 +252,7 @@ StateMachine EventProcessing_e0(StateMachine state)
     //***********电机报警进入急停end*************//
     
     Delay_Ms(500);  //延时等待电机减速至0
-    MotorEnable(MOTOR_state = TURN_OFF);
-    
-    
+  
     MSG_Event.event_orderStop =0; //事件标志清除
     MSG_Event.event_motorAlarm=0;
     MSG_Event.event_noPower=0;
@@ -358,11 +286,11 @@ StateMachine EventProcessing_e0(StateMachine state)
     
     if(1 == MSG_Event.event_engineOFF) //关发动机
     {
-      relayControl(RELAY_1, ENGINE_state=TURN_OFF);
+      EngineRelay(ENGINE_relayState=TURN_OFF);
       
     }else if(2 == MSG_Event.event_engineOFF)              //开发动机继电器
     {
-      relayControl(RELAY_1, ENGINE_state=TURN_ON);
+      EngineRelay(ENGINE_relayState=TURN_ON);
 
     }
     
@@ -456,33 +384,22 @@ StateMachine EventProcessing_e1(StateMachine state)
     
     MOTOR_control.leftSpeed  = MOTOR_control.rightSpeed = 0;
     TIM_ITConfig(TIM3, TIM_IT_CC1 | TIM_IT_CC2 | TIM_IT_CC3, DISABLE);
-    relayControl(RELAY_1, ENGINE_state=TURN_OFF);
+    EngineRelay(ENGINE_relayState=TURN_OFF);
     
  //   printf("遥控器急停：报警%d 指令%d 电量低%d\n",MSG_Event.event_motorAlarm ,MSG_Event.event_orderStop,MSG_Event.event_noPower);
       //***********电机报警进入急停start*************//
-    TIM_Cmd(TIM5, DISABLE);  //关闭定时器，
 
-    check_val= CRC16_MODBUS(sendData4,6);
-    
-    sendData4[6] = (uint8_t)check_val;
-    sendData4[7] = (uint8_t)(check_val>>8); 
     if(1 == MSG_Event.event_motorAlarm) //如果是电机报警测读取报警信息
     {
-    //  UART1_sendData(8,sendData4);
-    //  UART1_group.revFlag = 0;
-    //  printf("左电机报警\n");
+ 
       DEBUG_err |= 0x04;
       
     }
     if(2 == MSG_Event.event_motorAlarm)
     {
-     // UART4_sendData(8,sendData4);
-     // UART4_group.revFlag = 0;
-    //  printf("右电机报警\n");
       DEBUG_err |= 0x08;
       
     }
-    TIM_Cmd(TIM5, ENABLE);  //开定时器
     //***********电机报警进入急停end*************//
     
     
@@ -498,7 +415,7 @@ StateMachine EventProcessing_e1(StateMachine state)
     
     
     Delay_Ms(500);
-    MotorEnable(MOTOR_state = TURN_OFF);
+
 
     MSG_Event.event_orderStop =0; //事件标志清除
     MSG_Event.event_motorAlarm=0;
@@ -531,11 +448,11 @@ StateMachine EventProcessing_e1(StateMachine state)
       
       if(1 == MSG_Event.event_engineOFF) //关发动机
       {
-        relayControl(RELAY_1, ENGINE_state=TURN_OFF);
+        EngineRelay(ENGINE_relayState=TURN_OFF);
         
       }else if(2 == MSG_Event.event_engineOFF)              //开发动机继电器
       {
-        relayControl(RELAY_1, ENGINE_state=TURN_ON);
+        EngineRelay(ENGINE_relayState=TURN_ON);
       }
       
       MSG_Event.event_engineOFF = 0;

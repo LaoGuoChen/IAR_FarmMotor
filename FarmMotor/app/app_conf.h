@@ -56,8 +56,6 @@
 #define PWOER_DEFAULT         (3.8*6)    //电池电压值
 #define PWOER_MSG             100        //电池电压值系数，0-10000表示0-100，
         
-
-#define RS_232_CTR             0//速度是否为232控制，0否1是
 /*
 *状态1->2，条件vel_flag=0 && angle_flag=0 && 按键触发。2->1按键处罚 || vel_flag
 */
@@ -129,7 +127,8 @@ typedef struct{
 ********************************************************************************
 */
 
-extern SwitchState      ENGINE_state;   //发送机继电器转台
+extern SwitchState      ENGINE_relayState;   //发送机继电器状态
+extern uint8_t          ENGINE_state;   //发动机状态
 extern SwitchState      LED_state;
 extern SwitchState      MOTOR_state;  //伺服电机使能状态
 
@@ -164,7 +163,7 @@ void            StateMachineSwitching     (void);
 StateMachine    EventProcessing_e0        (StateMachine state);
 StateMachine    EventProcessing_e1        (StateMachine state);
 
-void            UART_DataCommunication         (void);
-void            CAN_DataCommunication         (void);
+void            SendSpeedValue            (void);
+void            CAN_DataCommunication     (void);
 
 #endif 

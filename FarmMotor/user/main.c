@@ -24,9 +24,7 @@
 #include "app_conf.h"
 #include "bsp_inputCapture.h"
 #include "io_output.h"
-#include "bsp_exti.h"
-#include "bsp_uart1.h"
-#include "bsp_uart2.h"
+#include "bsp_uart3.h"
 #include "bsp_uart4.h"
 #include "crc16_modbus.h"
 #include "bsp_adc.h"
@@ -74,16 +72,17 @@ void Data_Init(void);
 */
 MSG_Group       MSG_Event;  
 
-SwitchState LED_state;
-SwitchState MOTOR_state;
-SwitchState ENGINE_state;
+SwitchState     LED_state;
+SwitchState     MOTOR_state;
+SwitchState     ENGINE_relayState;
+uint8_t         ENGINE_state;
 
 float  ADC_powerVal[2]; 
 
 
 StateMachine    STATE_machine;
   
-UartGroup       UART1_group;
+UartGroup       UART3_group;
 UartGroup       UART4_group;
 ADC_Sampling    POWER_val;
 
@@ -99,7 +98,7 @@ uint8_t DEBUG_err=0;
                                局部变量     
 ********************************************************************************
 */
-static CanTxMsg TxMessage;
+
 /*
 ********************************************************************************
                                    mian函数
@@ -111,7 +110,6 @@ int main()
   BSP_ADCInit();
   OutPutInit();
   
-  MotorEnable(MOTOR_state = TURN_OFF);//初始化前关闭伺服使能
   Delay_Ms(3000);//等待电压稳定，//延时，等待驱动器初始化完成
   //上电检测驱动器电源电压，驱动器上电后才进入工作模式，伺服使能。
   while(POWER_val.powerVal2 < PWOER_DEFAULT)
@@ -123,20 +121,14 @@ int main()
 
 
  
-  UART1_Init();
+  UART3_Init();
   UART4_Init();
   BSP_CAN1_Init();
-  BSP_EXTI_Init(); 
+
   BSP_InputCatrueInit();
 
   Timer_Init();
  
-
-  
-  MotorEnable(MOTOR_state = TURN_ON);
-
-  //测试默认进入遥控器
- MSG_Event.event_orderHandle=1;
   while(1)
   { 
     
@@ -168,72 +160,13 @@ int main()
         MSG_Event.event_engineOFF=0;
         
       }
-      /*
-      if((1 == UART1_group.revFlag || 1 ==  UART4_group.revFlag) && 
-         (0x04 == UART1_group.revBuf[2] || 0x04 == UART4_group.revBuf[2]))
-      {
- 
-        TxMessage.StdId = USER_STDID_ADR6;             
-        TxMessage.IDE=CAN_ID_STD;           //标准标识符
-        TxMessage.RTR=CAN_RTR_DATA;
-        TxMessage.DLC=3;
-        TxMessage.Data[0]=0;
-        TxMessage.Data[1]=0;     
-        TxMessage.Data[2]=0;
-        
-        if(0x03 == UART1_group.revBuf[1] && 0x04 == UART1_group.revBuf[2])
-        {
-          TxMessage.Data[0]=0;
-          
-          TxMessage.Data[1]=UART1_group.revBuf[6]; 
-          TxMessage.Data[2]=UART1_group.revBuf[5]; 
-       //    printf("左电机报警\n");
-        }
-        
-        if(0x03 == UART4_group.revBuf[1] && 0x04 == UART4_group.revBuf[2])
-        {
-          TxMessage.Data[0]=1;
-          TxMessage.Data[1]=UART4_group.revBuf[6]; 
-          TxMessage.Data[2]=UART4_group.revBuf[5]; 
-      //     printf("右电机报警\n");
-        }
-        
-        UART1_group.revFlag = 0;
-        UART4_group.revFlag = 0;
-        CAN_Transmit(CAN1,&TxMessage);
-        Delay_Ms(50); //延时
-      }*/
-      break;
+      
     default:
       break;
     }
    //*****************进入状态机处理end*******************//
     
-   //读取负载曲线数据处理
-
-    if( 1 == UART1_group.revFlag && 1 ==  UART4_group.revFlag)
-    {
-      if(0x03 == UART1_group.revBuf[1] && 0x02 == UART1_group.revBuf[2] && 
-         0x03 == UART4_group.revBuf[1] && 0x02 == UART4_group.revBuf[2])
-      {
-    
-        TxMessage.StdId = USER_STDID_ADR9;             
-        TxMessage.IDE=CAN_ID_STD;           //标准标识符
-        TxMessage.RTR=CAN_RTR_DATA;
-        TxMessage.DLC=4;
-        TxMessage.Data[0]=UART1_group.revBuf[4];
-        TxMessage.Data[1]=UART1_group.revBuf[3];     
-        TxMessage.Data[2]=UART4_group.revBuf[4];
-        TxMessage.Data[3]=UART4_group.revBuf[3];
-        CAN_Transmit(CAN1,&TxMessage);
  
-        
-        UART1_group.revFlag = 0;
-        UART4_group.revFlag = 0;
-      }
-
-      
-    }
 
 
   }
@@ -269,7 +202,8 @@ void Data_Init(void)
   MOTOR_control.motor_dirL = 1;   
   MOTOR_control.motor_dirR = 0;  
   
-  ENGINE_state = TURN_OFF;
+  ENGINE_relayState = TURN_OFF;
+  ENGINE_state = 0;
   LED_state = TURN_OFF;
   MOTOR_state = TURN_OFF;
   

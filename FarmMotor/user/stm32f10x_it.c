@@ -52,11 +52,11 @@ uint8_t HeartTime = 0;
                                局部变量      
 ********************************************************************************
 */
-static uint8_t   uart1_recevieStart = 0;
-static uint8_t   uart1_dataCount = 0;   //接收数据计数
+//static uint8_t   uart3_recevieStart = 0;
+//static uint8_t   uart3_dataCount = 0;   //接收数据计数
 
-static uint8_t   uart4_recevieStart = 0;
-static uint8_t   uart4_dataCount = 0;   //接收数据计数
+//static uint8_t   uart4_recevieStart = 0;
+//static uint8_t   uart4_dataCount = 0;   //接收数据计数
 
 //脉宽检测
 static uint16_t  captrue_value1[3] = {0,0,0};
@@ -66,9 +66,6 @@ static uint16_t  d_value[3] = {0,0,0};
 
 
 
-static uint32_t rs232_online_cnt1=0;   //驱动器在线检测计数，定时器计数，串口接收中断中清零
-static uint32_t rs232_online_cnt2=0;
-
 static uint8_t switch_flag = 0;  //开关标志，切换模式标志
 
 static uint32_t  motor_vel=0;
@@ -76,7 +73,6 @@ signed short  canOrder_Lvel=0;
 signed short  canOrder_Rvel=0;
 
 static CanRxMsg RxMessage;
-
 
 
 /*
@@ -161,56 +157,15 @@ void USB_LP_CAN1_RX0_IRQHandler(void)
 ********************************************************************************
 */
 
-void USART1_IRQHandler(void)
+void USART3_IRQHandler(void)
 {
   
-   if(USART_GetITStatus(USART1,USART_IT_RXNE) != RESET)
+   if(USART_GetITStatus(USART3,USART_IT_RXNE) != RESET)
   { 
-    USART_ClearITPendingBit(USART1,USART_IT_RXNE); //清除中断标志
+    USART_ClearITPendingBit(USART3,USART_IT_RXNE); //清除中断标志
     
     uint8_t data = USART_ReceiveData(USART1);  
-    
-    if(1 == uart1_recevieStart)
-    { 
-      UART1_group.revBuf[uart1_dataCount++] = data;
-      
-      if(8 == uart1_dataCount && 0x10 == UART1_group.revBuf[1])
-      {
-        uart1_recevieStart = 0;
-        
-        if(0x10 == UART1_group.revBuf[1] && 0x44 == UART1_group.revBuf[2] && 0x20 == UART1_group.revBuf[3])
-        {
-          rs232_online_cnt1= 0;
-       
-        }
-      }else if(0x03 == UART1_group.revBuf[1])
-      {
-        
-        if(7 == uart1_dataCount && 0x02 == UART1_group.revBuf[2])
-        {
-          uart1_recevieStart = 0;
-          UART1_group.revFlag = 1;
-          rs232_online_cnt1= 0;
-        }else if(9 == uart1_dataCount && 0x04 == UART1_group.revBuf[2])
-        {
-          uart1_recevieStart = 0;
-          UART1_group.revFlag = 1;
-          rs232_online_cnt1= 0;
-        }
-      }
-      
-    }
-      
-    if((0x10 == data || 0x03 == data ) && 0 == uart1_recevieStart && 0 == UART1_group.revFlag)
-    {
-       uart1_dataCount = 0;
-       uart1_recevieStart = 1;
-       UART1_group.revBuf[uart1_dataCount++] = 0x00;
-       UART1_group.revBuf[uart1_dataCount++] = data;
-       
-    }
-    
-  
+   
   } 
 }
 
@@ -232,50 +187,6 @@ void UART4_IRQHandler(void)
   { 
     USART_ClearITPendingBit(UART4,USART_IT_RXNE); //清除中断标志
     uint8_t data = USART_ReceiveData(UART4); 
-    
-   if(1 == uart4_recevieStart)
-    { 
-      UART4_group.revBuf[uart4_dataCount++] = data;
-      
-      if(8 == uart4_dataCount && 0x10 == UART4_group.revBuf[1])
-      {
-        uart4_recevieStart = 0;
-        
-        if(0x10 == UART4_group.revBuf[1] && 0x44 == UART4_group.revBuf[2] && 0x20 == UART4_group.revBuf[3])
-        {
-          rs232_online_cnt2= 0;
-       
-        }
-      }else if(0x03 == UART4_group.revBuf[1])
-      {
-        
-        
-        if(7 == uart4_dataCount && 0x02 == UART4_group.revBuf[2])
-        {
-          uart4_recevieStart = 0;
-          UART4_group.revFlag = 1;
-          rs232_online_cnt2= 0;   
-          
-        }else if(9 == uart4_dataCount && 0x04 == UART4_group.revBuf[2])
-        {
-
-          uart4_recevieStart = 0;
-          UART4_group.revFlag = 1;
-          rs232_online_cnt2= 0;
-    
-        }
-      }
-      
-    }
-      
-    if((0x10 == data || 0x03 == data ) && 0 == uart4_recevieStart && 0 == UART4_group.revFlag)
-    {
-       uart4_dataCount = 0;
-       uart4_recevieStart = 1;
-       UART4_group.revBuf[uart4_dataCount++] = 0x00;
-       UART4_group.revBuf[uart4_dataCount++] = data;
-       
-    }
     
   }
 }
@@ -302,46 +213,24 @@ void TIM5_IRQHandler(void)
     TIM_Cmd(TIM5, DISABLE);  
     
     static uint8_t power_time=0;//ADC采样周期
+         
     
-    
-     
-    UART_DataCommunication();
     CAN_DataCommunication();
-
-    
-    //***********驱动器在线检测start***********************//
-#if RS_232_CTR
-    rs232_online_cnt1++;   
-    rs232_online_cnt2++;
-
-   if((rs232_online_cnt1 > RS_ONLINE_CNT) //驱动器掉线，关伺服使能
-      || (rs232_online_cnt2 > RS_ONLINE_CNT))
+    HeartTime++; //CAN数据反馈分时
+    if(HeartTime > HEART_TIME2)
     {
-      if(MOTOR_state == TURN_ON)
-      {
-        MotorEnable(MOTOR_state = TURN_OFF);
-      }
-      //记录错误
-      if(rs232_online_cnt1 > RS_ONLINE_CNT)
-      {
-        DEBUG_err |= 0x01;
-      }
-      if(rs232_online_cnt2 > RS_ONLINE_CNT)
-      {
-        DEBUG_err |= 0x02;
-      }
-      
-      
-    }else
-    {      
-      if(MOTOR_state == TURN_OFF && STATE_machine != urgentStop )
-      {
-        MotorEnable(MOTOR_state = TURN_ON);
-      }   
+      HeartTime = 0;
     }
-#endif
-     //***********驱动器在线检测end***********************//
-   
+    
+    //********发动机启停检测*******/
+  //   uint8_t bit = GPIO_ReadInputDataBit(GPIOC,GPIO_Pin_3);
+    if(GPIO_ReadInputDataBit(GPIOC,GPIO_Pin_3))
+    {
+      ENGINE_state = 1;
+    }else
+    {
+      ENGINE_state = 0;
+    }
 
     //************遥控器在线检测start**********************//
     if(0 == WORK_condition.online_flag) 
@@ -356,14 +245,9 @@ void TIM5_IRQHandler(void)
    
     //************遥控器在线检测end**********************//
    
-    HeartTime++;
-   if(HeartTime > HEART_TIME2)
-   {
-     HeartTime = 0;
-   }
    
+    //0.1秒采样一次，采集ADC_DMA_LEN次计算一次平均值
    power_time++;
-   //0.1秒采样一次，采集ADC_DMA_LEN次计算一次平均值
    if(2 == power_time)
     {
      ADC_Cmd(ADC1, ENABLE); 
@@ -698,82 +582,6 @@ void TIM3_IRQHandler(void)
   }
 }
 
-
-
-/*
-********************************************************************************
-                       void EXTI15_10_IRQHandler(void)
-
-描述：     外部中断，接收伺服准备输出IO，占时不用
-参数：     
-返回值：    无
-********************************************************************************
-*/
-void EXTI15_10_IRQHandler(void)
-{
-    if (EXTI_GetITStatus(EXTI_Line10) != RESET)
-    {
-        EXTI_ClearITPendingBit(EXTI_Line10); //清除标志
-
-    }else if (EXTI_GetITStatus(EXTI_Line11) != RESET)
-    {
-       EXTI_ClearITPendingBit(EXTI_Line11); //清除标志
-    }
-
-}
-
-
-/*
-********************************************************************************
-                       void EXTI15_10_IRQHandler(void)
-
-描述：     外部中断，下升沿报警，上降沿取消
-参数：     
-返回值：    无
-********************************************************************************
-*/
-void EXTI9_5_IRQHandler(void)
-{
-     if (EXTI_GetITStatus(EXTI_Line8) != RESET)
-    {
-        EXTI_ClearITPendingBit(EXTI_Line8); //清除标志
-        
-        
-    //    uint8_t bit = GPIO_ReadInputDataBit(GPIOB,GPIO_Pin_8);
-        
-    //    if(0 == bit)
-   //     {
-          //有报警
-          MSG_Event.event_motorAlarm = 1;
-          
-          for(uint8_t i=0;i<3;i++)
-          {
-            captrue_value1[i] = 0;
-            captrue_value2[i] = 0;
-            captrueFlag[i] = 0;
-          }         
-     
-    //    }
-
-    }else if (EXTI_GetITStatus(EXTI_Line9) != RESET)
-    {
-      EXTI_ClearITPendingBit(EXTI_Line9); //清除标志
-   //   uint8_t bit = GPIO_ReadInputDataBit(GPIOB,GPIO_Pin_9);
-    //  if(0 == bit)
-    //  {
-          //有报警
-          MSG_Event.event_motorAlarm = 2;
-         
-         for(uint8_t i=0;i<3;i++)
-         {
-          captrue_value1[i] = 0;
-          captrue_value2[i] = 0;
-          captrueFlag[i] = 0;
-         }
-
-  //    }
-    }
-}
 
 /*
 ****************************用户代码结束****************************************

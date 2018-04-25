@@ -39,10 +39,9 @@ void OutPutInit(void)
   
   GPIO_InitTypeDef  GPIO_InitStructure;
   
-  RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOE, ENABLE);
+  RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOE | RCC_APB2Periph_GPIOC, ENABLE);
   
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0 | GPIO_Pin_1 | GPIO_Pin_2 | GPIO_Pin_3 | GPIO_Pin_4 
-    | GPIO_Pin_5 | GPIO_Pin_6 | GPIO_Pin_7 | GPIO_Pin_8;
+  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15;
   
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
   
@@ -50,45 +49,22 @@ void OutPutInit(void)
   GPIO_Init(GPIOE, &GPIO_InitStructure);
   
 
-  GPIO_ResetBits(GPIOE,GPIO_Pin_0);
-  GPIO_ResetBits(GPIOE,GPIO_Pin_1);
-  GPIO_ResetBits(GPIOE,GPIO_Pin_2);
-  GPIO_ResetBits(GPIOE,GPIO_Pin_3);
-  GPIO_ResetBits(GPIOE,GPIO_Pin_4);
-  GPIO_ResetBits(GPIOE,GPIO_Pin_5);
-  GPIO_ResetBits(GPIOE,GPIO_Pin_6);
-  GPIO_ResetBits(GPIOE,GPIO_Pin_7);
-  GPIO_ResetBits(GPIOE,GPIO_Pin_8);
+  GPIO_ResetBits(GPIOE,GPIO_Pin_12);
+  GPIO_ResetBits(GPIOE,GPIO_Pin_13);
+  GPIO_ResetBits(GPIOE,GPIO_Pin_14);
+  GPIO_ResetBits(GPIOE,GPIO_Pin_15);
   
   
+  //发动机启停输入
+  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_3;
+  
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
+  
+  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;	
+  GPIO_Init(GPIOE, &GPIO_InitStructure);
+ 
 }
 
-/*
-********************************************************************************
-                 void MotorEnable(uint8_t enable)
-
-描述：     电机控制
-参数：     
-           enable 伺服使能 1开启，0关闭
-返回值：   无
-********************************************************************************
-*/
-
-void MotorEnable(uint8_t enable)
-{
-  //伺服使能
-  if(1 == enable)
-  {
-    GPIO_SetBits(GPIOE,GPIO_Pin_1);
-    GPIO_SetBits(GPIOE,GPIO_Pin_3);
-  }else
-  {
-    GPIO_ResetBits(GPIOE,GPIO_Pin_1);
-    GPIO_ResetBits(GPIOE,GPIO_Pin_3);
-  }
-  
-
-}
 
 /*
 ********************************************************************************
@@ -131,69 +107,52 @@ void DriveDirection(uint8_t dir)
 }
 /*
 ********************************************************************************
-                  void relayControl(uint8 num, uint8 val)
+                  EngineRelay(SwitchState state)
 
 描述：     继电器控制
-参数：     num编号，
-        state:
-        =TURN_ON                  1   //开
-        =TURN_OFF                 0   //关
+参数：    state:
+          =TURN_ON                  1   //开
+          =TURN_OFF                 0   //关
 返回值：   无
 ********************************************************************************
 */
-void relayControl(uint8_t num, SwitchState state)
-{
+void EngineRelay(SwitchState state)
+{ 
   
-  if(num == RELAY_1)
+  if(state == TURN_ON)
   {
-    if(state == TURN_ON)
-    {
-      GPIO_SetBits(GPIOE,GPIO_Pin_7);
-    }else
-    {
-      GPIO_ResetBits(GPIOE,GPIO_Pin_7);
-    }
-  }if(num == RELAY_2)
+    GPIO_SetBits(GPIOE,GPIO_Pin_0);
+  }else
   {
-    if(state == TURN_ON)
-    {
-      GPIO_SetBits(GPIOE,GPIO_Pin_8);
-    }else
-    {
-      GPIO_ResetBits(GPIOE,GPIO_Pin_8);
-    }
+    GPIO_ResetBits(GPIOE,GPIO_Pin_0);
   }
+  
 }
 
 /*
 ********************************************************************************
-                void ledControl(uint8 num, uint8 val)
+                void LedAlarm(SwitchState state)
 
 描述：     LED控制
-参数：     
-num :      LED_ALARM 报警信号       
-
+参数：         
 val :
 LED_state=TURN_ON                  1   //开
 LED_state=TURN_OFF                 0   //关
 返回值：   无
 ********************************************************************************
 */
-void ledControl(uint8_t num, SwitchState state)
+void LedAlarm(SwitchState state)
 {	
-  switch(num)
+  
+  if(state == TURN_ON)
   {
-  case LED_ALARM:
-    if(state == TURN_ON)
-    {
-      GPIO_SetBits(GPIOE,GPIO_Pin_6);
-    }else
-    {
-      GPIO_ResetBits(GPIOE,GPIO_Pin_6);
-    }
-
-    break;
+    GPIO_SetBits(GPIOE,GPIO_Pin_1);
+  }else
+  {
+    GPIO_ResetBits(GPIOE,GPIO_Pin_1);
   }
+  
+  
 }
 
 

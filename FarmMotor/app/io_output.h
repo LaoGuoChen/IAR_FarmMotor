@@ -28,9 +28,6 @@
 */
 
 
-#define         RELAY_2		1                //电继电器					
-#define         RELAY_1		2                //继电器
-
 #define         DIR_FORWARD     0   //前进  
 #define         DIR_BACK        1  //倒车
 #define         DIR_LEFT        2  //逆时针旋转
@@ -51,9 +48,8 @@
 */
 
 void    OutPutInit       (void);
-void    relayControl     (uint8_t num, SwitchState state);
-void    ledControl       (uint8_t num, SwitchState state);
-void    MotorEnable      (uint8_t enable);
+void    EngineRelay      (SwitchState state);
+void    LedAlarm         (SwitchState state);
 void    DriveDirection   (uint8_t dir);
 
 
