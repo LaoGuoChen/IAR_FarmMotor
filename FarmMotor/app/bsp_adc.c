@@ -90,7 +90,7 @@ static void ADC_Configuration(void)
 
   ADC_RegularChannelConfig(ADC1, ADC_Channel_1,  1, ADC_SampleTime_239Cycles5);  //对采样时间没要求，设计周期大采样精准
   ADC_RegularChannelConfig(ADC1, ADC_Channel_2,  2, ADC_SampleTime_239Cycles5);  
-  ADC_RegularChannelConfig(ADC1, ADC_Channel_4,  3, ADC_SampleTime_239Cycles5);  
+  ADC_RegularChannelConfig(ADC1, ADC_Channel_3,  3, ADC_SampleTime_239Cycles5);  
 
   
   ADC_DMACmd(ADC1, ENABLE);                      //使能 ADC1 DMA
@@ -173,7 +173,7 @@ static void ADC_NVIC_Configuration(void)
 static void ADC_GPIO_Configuration(void)
 {
   GPIO_InitTypeDef GPIO_InitStructure;
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_1 | GPIO_Pin_2 | GPIO_Pin_4;
+  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_1 | GPIO_Pin_2 | GPIO_Pin_3;
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AIN;
   GPIO_Init(GPIOA, &GPIO_InitStructure);
 }

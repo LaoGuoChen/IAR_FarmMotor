@@ -111,7 +111,7 @@ static void UART3_UART_Configuration(void){
 */
 static void UART3_RCC_Configuration(void){  
  //开启UART时钟，使能AFIO功能的时钟。
-  RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB,ENABLE);
+  RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOD | RCC_APB2Periph_AFIO,ENABLE);
   RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART3, ENABLE); 
                       
 }
@@ -127,20 +127,22 @@ static void UART3_RCC_Configuration(void){
 
 static void UART3_GPIO_Configuration(void){
   GPIO_InitTypeDef  GPIO_InitStructure;
-    GPIO_PinRemapConfig(GPIO_FullRemap_USART3, ENABLE);
- 
+  
+  GPIO_PinRemapConfig(GPIO_FullRemap_USART3, ENABLE);
+  
+ // GPIO_PinRemapConfig(GPIO_PartialRemap_USART3, ENABLE);
   //UART_TX引脚，推免输出
   GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8; 
   GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
-  GPIO_Init(GPIOB, &GPIO_InitStructure);
+  GPIO_Init(GPIOD, &GPIO_InitStructure);
   
   
   //UART_RX引脚，
   GPIO_InitStructure.GPIO_Pin = GPIO_Pin_9; 
   GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
-  GPIO_Init(GPIOB, &GPIO_InitStructure);
+  GPIO_Init(GPIOD, &GPIO_InitStructure);
 }
 /*
 ********************************************************************************

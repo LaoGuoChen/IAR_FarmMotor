@@ -51,9 +51,14 @@
 
 #define POWER_RATE1             11.0    //单个电池电压倍率
 #define POWER_RATE2             21.0    //两个电池电压倍率
-#define POWER_RATE3             (2.0*(1.0/5.0)*(250.0/0.5))    //液位深度转换单位米
+#define LEVEL_RATE            (2.0*(1.0/5.0)*(250.0/0.5))    //液位深度转换,0-250表示0.5米
+#define VOLTAGE_REFERENCE       (3.3*4) //AD采样运放系数
+#define POWER_PART_RATE          6.2 //分压电阻倍率，根据实际电路计算 
+#define LEVEL_CHECK_CNT          3     //药量采样检测计数
+#define POWER_CHECK_CNT          10     //电量量采样检测计数
 
-#define PWOER_DEFAULT         (3.8*6)    //电池电压值
+#define LEVEL_DEFAUL           25         //最低药量0-250 0-50cm，25->5cm
+#define PWOER_DEFAULT         (3.8*6)    //最低电池电压值
 #define PWOER_MSG             100        //电池电压值系数，0-10000表示0-100，
         
 /*

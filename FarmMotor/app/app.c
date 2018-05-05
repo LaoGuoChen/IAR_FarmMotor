@@ -531,7 +531,7 @@ void SetCarSpeed(double angle,uint8_t dir,uint32_t vel)
      MOTOR_control.rightSpeed = 0;
    }
    
-  // printf(" 2速度%d ",motor_vel);
+   printf("速度左=%d 右=%d \n",MOTOR_control.leftSpeed,MOTOR_control.rightSpeed);
 }
 
 /*

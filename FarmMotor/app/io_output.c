@@ -41,7 +41,7 @@ void OutPutInit(void)
   
   RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOE | RCC_APB2Periph_GPIOC, ENABLE);
   
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15;
+  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0 | GPIO_Pin_1 | GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15;
   
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
   
@@ -49,6 +49,9 @@ void OutPutInit(void)
   GPIO_Init(GPIOE, &GPIO_InitStructure);
   
 
+  GPIO_ResetBits(GPIOE,GPIO_Pin_0);
+  GPIO_ResetBits(GPIOE,GPIO_Pin_1);
+   
   GPIO_ResetBits(GPIOE,GPIO_Pin_12);
   GPIO_ResetBits(GPIOE,GPIO_Pin_13);
   GPIO_ResetBits(GPIOE,GPIO_Pin_14);
@@ -62,6 +65,8 @@ void OutPutInit(void)
   
   GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;	
   GPIO_Init(GPIOE, &GPIO_InitStructure);
+  
+ 
  
 }
 

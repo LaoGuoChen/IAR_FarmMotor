@@ -110,14 +110,14 @@ int main()
   BSP_ADCInit();
   OutPutInit();
   
-  Delay_Ms(3000);//等待电压稳定，//延时，等待驱动器初始化完成
+  //Delay_Ms(3000);//等待电压稳定，//延时，等待驱动器初始化完成
   //上电检测驱动器电源电压，驱动器上电后才进入工作模式，伺服使能。
-  while(POWER_val.powerVal2 < PWOER_DEFAULT)
-  {  
-     ADC_Cmd(ADC1, ENABLE); 
-     ADC_SoftwareStartConvCmd(ADC1, ENABLE); 
-     Delay_Ms(20);//上电时20ms采一次 采ADC_DMA_LEN次计算平均值
-  }
+ // while(POWER_val.powerVal2 < PWOER_DEFAULT)
+ // {  
+ //    ADC_Cmd(ADC1, ENABLE); 
+ //    ADC_SoftwareStartConvCmd(ADC1, ENABLE); 
+ //    Delay_Ms(20);//上电时20ms采一次 采ADC_DMA_LEN次计算平均值
+ // }
 
 
  
@@ -129,9 +129,11 @@ int main()
 
   Timer_Init();
  
+  //测试模式
+  MSG_Event.event_orderHandle = 1;
   while(1)
   { 
-    
+       
     //*****************进入状态机处理start*******************//
     switch(STATE_machine)
     {
@@ -164,6 +166,7 @@ int main()
     default:
       break;
     }
+
    //*****************进入状态机处理end*******************//
     
  

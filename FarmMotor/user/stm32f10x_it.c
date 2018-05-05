@@ -134,10 +134,10 @@ void USB_LP_CAN1_RX0_IRQHandler(void)
       break;
     case USER_STDID_ADR3:
      
-    //  MOTOR_control.can_leftSpeed = (signed short)(RxMessage.Data[0] | (RxMessage.Data[1]<<8));
-    //  MOTOR_control.can_rightSpeed = (signed short)(RxMessage.Data[2] | (RxMessage.Data[3]<<8));
+   //   MOTOR_control.can_leftSpeed = (signed short)(RxMessage.Data[0] | (RxMessage.Data[1]<<8));
+   //   MOTOR_control.can_rightSpeed = (signed short)(RxMessage.Data[2] | (RxMessage.Data[3]<<8));
   
- //     printf("CAN速度指令 左电机%d 右电机%d \n",MOTOR_control.can_leftSpeed,MOTOR_control.can_rightSpeed);
+   //   printf("CAN速度指令 左电机%d 右电机%d \n",MOTOR_control.can_leftSpeed,MOTOR_control.can_rightSpeed);
       
     //  MSG_Event.event_orderSpeed = 1;
     
@@ -149,9 +149,9 @@ void USB_LP_CAN1_RX0_IRQHandler(void)
 
 /*
 ********************************************************************************
-                         void USART1_IRQHandler(void)
+                         void USART3_IRQHandler(void)
 
-描述：     USART1接收中断
+描述：     USART3接收中断
 参数：     
 返回值：    无
 ********************************************************************************
@@ -164,7 +164,8 @@ void USART3_IRQHandler(void)
   { 
     USART_ClearITPendingBit(USART3,USART_IT_RXNE); //清除中断标志
     
-    uint8_t data = USART_ReceiveData(USART1);  
+    uint8_t data = USART_ReceiveData(USART3);  
+
    
   } 
 }
@@ -187,12 +188,12 @@ void UART4_IRQHandler(void)
   { 
     USART_ClearITPendingBit(UART4,USART_IT_RXNE); //清除中断标志
     uint8_t data = USART_ReceiveData(UART4); 
+    //printf("%x ",data);
     
   }
 }
 
 
- 
 
 /*
 ********************************************************************************
@@ -212,14 +213,34 @@ void TIM5_IRQHandler(void)
     
     TIM_Cmd(TIM5, DISABLE);  
     
-    static uint8_t power_time=0;//ADC采样周期
-         
-    
     CAN_DataCommunication();
     HeartTime++; //CAN数据反馈分时
     if(HeartTime > HEART_TIME2)
     {
       HeartTime = 0;
+    }
+    
+    static uint8_t led_time=0;//ADC采样周期
+    led_time++;
+    if(led_time == 10)
+    {
+      led_time=0;
+      
+      if(GPIO_ReadInputDataBit(GPIOE,GPIO_Pin_12) == 0)
+      {
+     //   GPIO_SetBits(GPIOE,GPIO_Pin_1);
+        GPIO_SetBits(GPIOE,GPIO_Pin_12);
+      //  GPIO_SetBits(GPIOE,GPIO_Pin_13);
+      //  GPIO_SetBits(GPIOE,GPIO_Pin_14);
+      //  GPIO_SetBits(GPIOE,GPIO_Pin_15);
+      }else
+      {
+     //   GPIO_ResetBits(GPIOE,GPIO_Pin_1);
+        GPIO_ResetBits(GPIOE,GPIO_Pin_12);
+     //   GPIO_ResetBits(GPIOE,GPIO_Pin_13);
+     //   GPIO_ResetBits(GPIOE,GPIO_Pin_14);
+     //   GPIO_ResetBits(GPIOE,GPIO_Pin_15);
+      }
     }
     
     //********发动机启停检测*******/
@@ -245,15 +266,11 @@ void TIM5_IRQHandler(void)
    
     //************遥控器在线检测end**********************//
    
-   
-    //0.1秒采样一次，采集ADC_DMA_LEN次计算一次平均值
-   power_time++;
-   if(2 == power_time)
-    {
-     ADC_Cmd(ADC1, ENABLE); 
-     ADC_SoftwareStartConvCmd(ADC1, ENABLE); 
-     power_time= 0;
-    }
+ 
+    //50ms采样一次，采集ADC_DMA_LEN次计算一次平均值
+    ADC_Cmd(ADC1, ENABLE); 
+    ADC_SoftwareStartConvCmd(ADC1, ENABLE); 
+  
    
     TIM_Cmd(TIM5, ENABLE);  
   }
@@ -283,16 +300,16 @@ void  DMA1_Channel1_IRQHandler(void)
     {
       if(i%ADC_DMA_CH == 0)
       {
-         POWER_val.powerVal1 +=ADC_ConvertedValue[i];
+         POWER_val.waterLevel +=ADC_ConvertedValue[i];
          
       }else if(i%ADC_DMA_CH == 1)
       {
-         POWER_val.powerVal2 +=ADC_ConvertedValue[i];
+         POWER_val.powerVal1 +=ADC_ConvertedValue[i];
          
       }else if(i%ADC_DMA_CH == 2)
       {
         
-        POWER_val.waterLevel +=ADC_ConvertedValue[i];
+        POWER_val.powerVal2 +=ADC_ConvertedValue[i];
      //   printf("%d ",ADC_ConvertedValue[i]);
        
         
@@ -306,28 +323,62 @@ void  DMA1_Channel1_IRQHandler(void)
 //((POWER_val.powerVal2/4095)/ADC_DMA_LEN)*3.3,((POWER_val.waterLevel/4095)/ADC_DMA_LEN)*3.3*2.0*(1.0/5.0));
     
     
-    POWER_val.powerVal1  = ((POWER_val.powerVal1/4095)/ADC_DMA_LEN)*3.3*POWER_RATE1;
-    POWER_val.powerVal2  = ((POWER_val.powerVal2/4095)/ADC_DMA_LEN)*3.3*POWER_RATE2;
-    POWER_val.waterLevel = ((POWER_val.waterLevel/4095)/ADC_DMA_LEN)*3.3*POWER_RATE3;
+   // POWER_val.powerVal1  = ((POWER_val.powerVal1/4095)/ADC_DMA_LEN)*3.3*POWER_RATE1;
+  //  POWER_val.powerVal2  = ((POWER_val.powerVal2/4095)/ADC_DMA_LEN)*3.3*POWER_RATE2;
+  //  POWER_val.waterLevel = ((POWER_val.waterLevel/4095)/ADC_DMA_LEN)*3.3*POWER_RATE3;
     
-    printf("电池电量：%0.3f %0.3f %0.3f\n",POWER_val.powerVal1,POWER_val.powerVal2,POWER_val.waterLevel);
+    //新电路计算值
+    
+    POWER_val.powerVal1  = ((POWER_val.powerVal1/ADC_DMA_LEN)/4095)*VOLTAGE_REFERENCE;
+    POWER_val.powerVal2  = ((POWER_val.powerVal2/ADC_DMA_LEN)/4095)*VOLTAGE_REFERENCE*POWER_PART_RATE;  
+    POWER_val.waterLevel = ((POWER_val.waterLevel/ADC_DMA_LEN)/4095)*VOLTAGE_REFERENCE*LEVEL_RATE;
+    
+  //  printf("电池电量：%0.3f %0.3f %0.3f\n",POWER_val.powerVal1,POWER_val.powerVal2,POWER_val.waterLevel);
+    
+    static uint8_t power_check_cnt1=0;
+    static uint8_t power_check_cnt2=0;
+    static uint8_t level_check_cnt=0;
     
     //电池电压过低进入急停
     if(POWER_val.powerVal1 < PWOER_DEFAULT)
-//    if(POWER_val.powerVal1 < 24)
+      //    if(POWER_val.powerVal1 < 24)
     {
-      MSG_Event.event_noPower = 1;
-   //    printf("电池过低1：%d\n",MSG_Event.event_noPower );
-    
+      power_check_cnt1++;
+      if(power_check_cnt1>=POWER_CHECK_CNT){
+        MSG_Event.event_noPower = 1;
+      }
+      //    printf("电池过低1：%d\n",MSG_Event.event_noPower );
+      
+    }else
+    {
+       power_check_cnt1=0;
     }
     //电池电压过低进入急停
     if(POWER_val.powerVal2 > POWER_val.powerVal1)
     {
       if((POWER_val.powerVal2 - POWER_val.powerVal1) < PWOER_DEFAULT)
       {
-        MSG_Event.event_noPower =1;
-  //      printf("电池过低2：%0.3f\n",POWER_val.powerVal2 - POWER_val.powerVal1 );
+        power_check_cnt2++;
+        if(power_check_cnt2>=POWER_CHECK_CNT){
+          MSG_Event.event_noPower =1;
+        }
+        //      printf("电池过低2：%0.3f\n",POWER_val.powerVal2 - POWER_val.powerVal1 );
       }
+    }else
+    {
+      power_check_cnt2=0;
+    }
+    //药量不足，关闭
+    if(POWER_val.waterLevel<LEVEL_DEFAUL)
+    {
+      level_check_cnt++;
+      if(level_check_cnt>=LEVEL_CHECK_CNT)//关发动机
+      {
+        EngineRelay(ENGINE_relayState=TURN_OFF); 
+      }
+    }else
+    {
+      level_check_cnt=0;
     }
     
   }  
