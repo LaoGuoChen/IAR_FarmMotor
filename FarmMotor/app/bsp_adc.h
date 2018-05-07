@@ -43,6 +43,7 @@ extern uint16_t  ADC_ConvertedValue[ADC_DMA_CH*ADC_DMA_LEN];    //AD采样接收缓存
 ********************************************************************************
 */
 
-void BSP_ADCInit(void);
+void    BSP_ADCInit     (void);
+double  ADC_Filter      (double value,double new_value);
 
 #endif

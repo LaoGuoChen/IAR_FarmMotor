@@ -175,7 +175,7 @@ void SendSpeedValue(void)
     
     can_leftSpeed = ~(MOTOR_control.leftSpeed/SPEED_RATE)+1;
   }
-  //   printf("发送速度：%d %d\n",MOTOR_control.leftSpeed,MOTOR_control.rightSpeed);
+
   
   if(STATE_machine == handleControl)
   {//只有再遥控器控制模式下才发速度指令
@@ -191,6 +191,7 @@ void SendSpeedValue(void)
     TxMessage.Data[3]=(uint8_t)(can_rightSpeed>>8);
     
     CAN_Transmit(CAN1,&TxMessage);
+  //  printf("发送速度：%d %d\n",MOTOR_control.leftSpeed,MOTOR_control.rightSpeed);
     
   }
   
@@ -383,7 +384,9 @@ StateMachine EventProcessing_e1(StateMachine state)
   {
     
     MOTOR_control.leftSpeed  = MOTOR_control.rightSpeed = 0;
+    
     TIM_ITConfig(TIM3, TIM_IT_CC1 | TIM_IT_CC2 | TIM_IT_CC3, DISABLE);
+    
     EngineRelay(ENGINE_relayState=TURN_OFF);
     
  //   printf("遥控器急停：报警%d 指令%d 电量低%d\n",MSG_Event.event_motorAlarm ,MSG_Event.event_orderStop,MSG_Event.event_noPower);

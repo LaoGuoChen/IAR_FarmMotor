@@ -16,6 +16,8 @@
 #include "bsp_adc.h"
 #include "app_conf.h"
 
+#define FILTER_A  0.1   //滤波系数
+
 
 /*
 ********************************************************************************
@@ -42,6 +44,25 @@ static void ADC_NVIC_Configuration(void);
 static void ADC_DMA_Config(void);  
 
 
+/*
+********************************************************************************
+                    double  ADC_Filter(double new_value ,double value)
+
+描述：     初始AD采样滤波，一阶滤波
+参数：     无
+返回值：   无
+********************************************************************************
+*/
+double  ADC_Filter(double value,double new_value)
+{
+  double v;
+  
+  v = (1-FILTER_A)*value + FILTER_A*new_value;
+  
+  return v;
+  
+  
+}
 
 /*
 ********************************************************************************

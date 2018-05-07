@@ -100,7 +100,7 @@ static void INPUT_TIM_Configuration(void)
   TIM_ICInit(TIM3, &TIM_ICInitStructure);
   
   TIM_Cmd(TIM3, ENABLE);
- // TIM_ITConfig(TIM3, TIM_IT_CC1 | TIM_IT_CC2 | TIM_IT_CC3, ENABLE);
+  //TIM_ITConfig(TIM3, TIM_IT_CC1 | TIM_IT_CC2 | TIM_IT_CC3, ENABLE);
   
 }
 

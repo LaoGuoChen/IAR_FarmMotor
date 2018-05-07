@@ -134,31 +134,70 @@ void EngineRelay(SwitchState state)
   
 }
 
+
 /*
 ********************************************************************************
-                void LedAlarm(SwitchState state)
+               void  RunMessage(uint8_t whatMsg,SwitchState state)
 
-描述：     LED控制
+描述：     运行提示LED
 参数：         
-val :
+whatMsg :指示信息
 LED_state=TURN_ON                  1   //开
 LED_state=TURN_OFF                 0   //关
 返回值：   无
 ********************************************************************************
 */
-void LedAlarm(SwitchState state)
-{	
+void  RunMessage(uint8_t whatMsg,SwitchState state)
+{
   
-  if(state == TURN_ON)
+  switch(whatMsg)
   {
-    GPIO_SetBits(GPIOE,GPIO_Pin_1);
-  }else
-  {
-    GPIO_ResetBits(GPIOE,GPIO_Pin_1);
+  case RUN_LED:
+    if(state == TURN_ON)
+    {
+      GPIO_SetBits(GPIOE,GPIO_Pin_12);
+    }else
+    {
+      GPIO_ResetBits(GPIOE,GPIO_Pin_12);
+    }
+    break;
+  case ENGINE_LED:
+    if(state == TURN_ON)
+    {
+      GPIO_SetBits(GPIOE,GPIO_Pin_13);
+    }else
+    {
+      GPIO_ResetBits(GPIOE,GPIO_Pin_13);
+    }
+    break;
+  case NO_LEVEL_LED:
+    if(state == TURN_ON)
+    {
+      GPIO_SetBits(GPIOE,GPIO_Pin_14);
+    }else
+    {
+      GPIO_ResetBits(GPIOE,GPIO_Pin_14);
+    }
+    break;
+  case NO_POWER_LED:
+    if(state == TURN_ON)
+    {
+      GPIO_SetBits(GPIOE,GPIO_Pin_15);
+    }else
+    {
+      GPIO_ResetBits(GPIOE,GPIO_Pin_15);
+    }
+    break;
+  case STOP_LED:
+    if(state == TURN_ON)
+    {
+      GPIO_SetBits(GPIOE,GPIO_Pin_1);
+    }else
+    {
+      GPIO_ResetBits(GPIOE,GPIO_Pin_1);
+    }
+    break;
+    
   }
-  
-  
 }
-
-
 

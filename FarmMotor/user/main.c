@@ -77,7 +77,7 @@ SwitchState     MOTOR_state;
 SwitchState     ENGINE_relayState;
 uint8_t         ENGINE_state;
 
-float  ADC_powerVal[2]; 
+
 
 
 StateMachine    STATE_machine;
@@ -109,20 +109,11 @@ int main()
   Data_Init();   
   BSP_ADCInit();
   OutPutInit();
-  
-  //Delay_Ms(3000);//等待电压稳定，//延时，等待驱动器初始化完成
-  //上电检测驱动器电源电压，驱动器上电后才进入工作模式，伺服使能。
- // while(POWER_val.powerVal2 < PWOER_DEFAULT)
- // {  
- //    ADC_Cmd(ADC1, ENABLE); 
- //    ADC_SoftwareStartConvCmd(ADC1, ENABLE); 
- //    Delay_Ms(20);//上电时20ms采一次 采ADC_DMA_LEN次计算平均值
- // }
-
-
  
+
+  Delay_Ms(300);
   UART3_Init();
-  UART4_Init();
+  //UART4_Init();
   BSP_CAN1_Init();
 
   BSP_InputCatrueInit();
@@ -133,7 +124,7 @@ int main()
   MSG_Event.event_orderHandle = 1;
   while(1)
   { 
-       
+ 
     //*****************进入状态机处理start*******************//
     switch(STATE_machine)
     {
@@ -168,9 +159,6 @@ int main()
     }
 
    //*****************进入状态机处理end*******************//
-    
- 
-
 
   }
 
@@ -193,9 +181,10 @@ void Data_Init(void)
   WORK_condition.angle_flag = 0;
   WORK_condition.online_flag = 0;
   WORK_condition.state = 0;
-  
-  ADC_powerVal[0] = 0;
-  ADC_powerVal[1] = 0;
+
+  POWER_val.powerVal1 =0;
+  POWER_val.powerVal2 = 0;
+  POWER_val.waterLevel = 0;
 
   MOTOR_control.leftSpeed = 0;
   MOTOR_control.rightSpeed = 0;

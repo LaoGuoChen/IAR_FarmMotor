@@ -38,6 +38,12 @@
 #define         TURN_LEFT       1
 #define         TURN_RIGHT      2
 
+#define         RUN_LED         1 //正常运行led 闪烁正常运行
+#define         ENGINE_LED      2 //发动机启停 启动led常亮
+#define         NO_LEVEL_LED    3 //没药led常亮
+#define         NO_POWER_LED    4 //电量不足led常亮
+#define         STOP_LED        5 //进入急停led常亮
+
 
 
 
@@ -49,8 +55,8 @@
 
 void    OutPutInit       (void);
 void    EngineRelay      (SwitchState state);
-void    LedAlarm         (SwitchState state);
 void    DriveDirection   (uint8_t dir);
+void    RunMessage       (uint8_t whatMsg,SwitchState state);
 
 
 #endif
