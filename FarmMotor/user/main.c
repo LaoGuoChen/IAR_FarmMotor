@@ -65,6 +65,8 @@ return ch;
 void Data_Init(void);
 
 
+
+
 /*
 ********************************************************************************
                                全局变量      
@@ -83,7 +85,7 @@ uint8_t         ENGINE_state;
 StateMachine    STATE_machine;
   
 UartGroup       UART3_group;
-UartGroup       UART4_group;
+
 ADC_Sampling    POWER_val;
 
 MotorCtrGroup MOTOR_control;
@@ -151,15 +153,46 @@ int main()
         MSG_Event.event_orderSpeed=0;
         MSG_Event.event_orderStop=0;
         MSG_Event.event_engineOFF=0;
+        MSG_Event.event_orderCruise=0;
+        
+        MOTOR_control.cruise_leftSpeed=0;
+        MOTOR_control.cruise_rightSpeed=0;
+        MOTOR_control.cruise_orderSpeed=0;
         
       }
-      
+    case cruiseControl: //定速巡航
+      STATE_machine = EventProcessing_e2(STATE_machine);
+     //  printf("--进入定速巡航--%d\n",STATE_machine);
+      break;
     default:
       break;
     }
 
    //*****************进入状态机处理end*******************//
 
+    //byte0帧头，byte1帧长（除去帧头校验） byte2控制0结束1开始，byte3速度值 byte4校验
+   if(1 == UART3_group.revFlag && STATE_machine != cruiseControl)
+   {
+     uint8_t check=0;
+     for(uint8_t i=1;i<=UART3_group.revBuf[1];i++)//数据校验
+     {
+       check += UART3_group.revBuf[i];
+     }
+     
+     if(check == UART3_group.revBuf[UART3_group.revBuf[1]+1] && 1 == UART3_group.revBuf[2])
+     {
+        //float right_v=((Vr/16.0)*MATH_PI*2.0*CAR_WHEEL_RADIUM)/60.0;
+       
+        MOTOR_control.cruise_orderSpeed = (double)UART3_group.revBuf[3]/100;//单转化成 米/秒
+       
+        MSG_Event.event_orderCruise = 1;
+        
+     }else
+     {
+       printf("--接收定速巡航数据校验失败--");
+     }
+     UART3_group.revFlag =0;
+   }
   }
 
 }
@@ -181,6 +214,8 @@ void Data_Init(void)
   WORK_condition.angle_flag = 0;
   WORK_condition.online_flag = 0;
   WORK_condition.state = 0;
+  WORK_condition.curise_start =0;
+  
 
   POWER_val.powerVal1 =0;
   POWER_val.powerVal2 = 0;
@@ -190,6 +225,10 @@ void Data_Init(void)
   MOTOR_control.rightSpeed = 0;
   MOTOR_control.can_leftSpeed=0;
   MOTOR_control.can_rightSpeed=0;
+  MOTOR_control.cruise_leftSpeed=0;
+  MOTOR_control.cruise_rightSpeed=0;
+  MOTOR_control.cruise_orderSpeed=0;
+  
 
   MOTOR_control.motor_dirL = 1;   
   MOTOR_control.motor_dirR = 0;  
@@ -199,6 +238,8 @@ void Data_Init(void)
   LED_state = TURN_OFF;
   MOTOR_state = TURN_OFF;
   
+  UART3_group.revFlag =0;
+  
   //事件标志初始化
   MSG_Event.event_motorAlarm=0;
   MSG_Event.event_orderStop=0;
@@ -207,6 +248,7 @@ void Data_Init(void)
   MSG_Event.event_orderSpeed=0;
   MSG_Event.event_orderCAN=0;
   MSG_Event.event_engineOFF=0;
+  MSG_Event.event_orderCruise=0;
  
   
   STATE_machine = busControl;

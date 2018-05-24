@@ -27,7 +27,7 @@
 */
 #define CAPTURE_F                 100           //脉宽捕获频率KHz
 #define ZERO_RANGE                50            //在原点值基础上+-这个值就是原点范围，在这个范围内都认为是远点
-#define PULSE_VEL_ZERO            1530          //us速度控制，<1500是向后加速 >1500是向前加速 +_500
+#define PULSE_VEL_ZERO            1590          //us速度控制，<1500是向后加速 >1500是向前加速 +_500
 #define PULSE_VEL                 (500-ZERO_RANGE)          //速度调节范围
 #define PULSE_DIR_ZERO            1460          //us方向控制  >1500++是左转，<1500--是向右转 +_500
 #define PULSE_DIR                 (500-ZERO_RANGE)           //反向调节范围
@@ -39,7 +39,8 @@
 #define SPEED_MAX                  10000         //电机驱动最大速度，rpm/min
 #define SPEED_RATE                 10           //速度倍率，CAN发来的速度数据
 
-#define PI 3.14159265
+#define PI 3.141592654
+
 
 #define LENGTH_L               0.652 //车轮轴间距
 #define LENGTH_B               1     //虚拟前轮与后轮垂直距离
@@ -51,14 +52,18 @@
 
 #define POWER_RATE1             11.0    //单个电池电压倍率
 #define POWER_RATE2             21.0    //两个电池电压倍率
-#define LEVEL_RATE            (2.0*(1.0/5.0)*(250.0/0.5))    //液位深度转换,0-250表示0.5米
+#define LEVEL_RATE            ((1.0/5.0)*(250.0/0.5))    //液位深度转换,0-250表示0.5米
 #define VOLTAGE_REFERENCE       (3.3*4) //AD采样运放系数
 #define POWER_PART_RATE          6.2 //分压电阻倍率，根据实际电路计算 
 
 
-#define LEVEL_DEFAUL           25         //最低药量0-250 0-50cm，25->5cm
+#define LEVEL_DEFAUL           30         //最低药量0-250 0-50cm，30->6cm
 #define PWOER_DEFAULT         (3.8*6)    //最低电池电压值
 #define PWOER_MSG             100        //电池电压值系数，0-10000表示0-100，
+
+#define CAR_WHEEL_RADIUM 0.1485
+
+
         
 /*
 *状态1->2，条件vel_flag=0 && angle_flag=0 && 按键触发。2->1按键处罚 || vel_flag
@@ -68,6 +73,7 @@ typedef struct {
   volatile uint8_t angle_flag;   //方向盘标志，0为角度零，1为角度>0.
   volatile uint8_t online_flag;  //在线标志，即是控制手柄掉电或关机,0掉线1在线
   volatile uint8_t state;        //模式，0为正常模式，1为旋转模式 
+  volatile uint8_t curise_start;        //定速巡航 1开始行走 0停止
   
   
 }StateCondition;
@@ -97,7 +103,9 @@ typedef enum
 typedef enum{    //状态
   busControl=0,     //指令控制状态
   handleControl=1,  //遥控器状态
-  urgentStop=2      //急停状态
+  urgentStop=2,      //急停状态
+  cruiseControl=3  //定速巡航
+
   
 }StateMachine;
 
@@ -107,6 +115,7 @@ typedef struct{  //消息事件 为1时表示事件发生0表示没发生
   uint8_t event_orderStop;     //急停
   uint8_t event_noPower;       //电池电量低
   uint8_t event_orderHandle;   //进入遥控器模式
+  uint8_t event_orderCruise;
   uint8_t event_orderSpeed;    //速度指令 
   uint8_t event_orderCAN;      //总线控制
   uint8_t event_engineOFF;     //关发动机 1关发动机继电器2开发动机继电器
@@ -117,6 +126,10 @@ typedef struct{
   
   signed short  can_leftSpeed;  //can接收到的速度
   signed short  can_rightSpeed;
+  
+  signed short  cruise_leftSpeed;  //定速巡航速度
+  signed short  cruise_rightSpeed;
+  double         cruise_orderSpeed;
   
   int            leftSpeed;   //电机当前速度
   int            rightSpeed;
@@ -150,6 +163,8 @@ extern  MotorCtrGroup MOTOR_control;
 
 extern  uint8_t DEBUG_err;
 
+extern  UartGroup UART3_group;
+
 
 
 
@@ -166,8 +181,11 @@ void            SetCarSpeed               (double angle,uint8_t dir,uint32_t vel
 void            StateMachineSwitching     (void);
 StateMachine    EventProcessing_e0        (StateMachine state);
 StateMachine    EventProcessing_e1        (StateMachine state);
+StateMachine    EventProcessing_e2        (StateMachine state);
+
 
 void            SendSpeedValue            (void);
 void            CAN_DataCommunication     (void);
+void            CruiseControlAsk          (void);
 
 #endif 
